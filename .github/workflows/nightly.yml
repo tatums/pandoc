@@ -1,14 +1,9 @@
 name: Nightly
 
 on:
-  workflow_call:
-    inputs:
-      username:
-        description: 'A username passed from the caller workflow'
-        default: 'john-doe'
-        required: false
-        type: string
-
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -43,34 +38,6 @@ jobs:
         name: nightly-linux
         path: nightly-linux
 
-  windows:
-
-    runs-on: windows-2019
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Install ghc
-      run: |
-        ghcup install ghc --set 9.4.4
-    - name: Install dependencies
-      run: |
-          cabal update
-          cabal build --dependencies-only -fembed_data_files -fnightly pandoc-cli
-    - name: Build artifacts
-      shell: cmd
-      run: |
-          for /f %%a in ('powershell -Command "Get-Date -format yyyy-MM-dd"') do set THEDATE=%%a
-          set ARTIFACTS=%CD%\nightly-windows\pandoc-nightly-windows-%THEDATE%
-          mkdir %ARTIFACTS%
-          cabal install --install-method=copy --installdir=%ARTIFACTS% -fnightly -fembed_data_files pandoc-cli
-          strip %ARTIFACTS%/pandoc
-          copy COPYRIGHT %ARTIFACTS%
-          ren %ARTIFACTS%\COPYRIGHT COPYRIGHT.txt
-          echo Built from %GITHUB_SHA% > %ARTIFACTS%\README.nightly.txt
-    - uses: actions/upload-artifact@v3
-      with:
-        name: nightly-windows
-        path: nightly-windows
 
   macos:
 
